@@ -1,0 +1,24 @@
+{
+  "name": "meetingroom-web",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Web frontend for the physical web meetingroom app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/janjongboom/meetingroom-web.git"
+  },
+  "author": "Jan Jongboom <janjongboom@gmail.com>",
+  "homepage": "https://github.com/janjongboom/meetingroom-web",
+  "dependencies": {
+    "dirty": "^0.9.9",
+    "express": "^4.13.1",
+    "express-session": "^1.11.3",
+    "passport": "^0.2.2",
+    "passport-google-oauth2": "^0.1.6",
+    "session-file-store": "0.0.16"
+  }
+}
