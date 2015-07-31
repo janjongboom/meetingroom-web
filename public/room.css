@@ -1,0 +1,114 @@
+@import url(//fonts.googleapis.com/css?family=Open+Sans:400,700,300,600,800);
+
+html {
+  font-size: 3.5vw;
+}
+
+body {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+#header {
+  background-image: linear-gradient(to bottom, #563D7C 0px, #6F5499 100%);
+  color: #CDBFE3;
+  padding: 1rem;
+  font-weight: 300;
+  font-size: 1.6rem;
+  border-bottom: solid 1px #CDBFE3;
+}
+
+#state {
+  display: flex;
+}
+
+.state {
+  font-size: 4rem;
+  font-weight: 600;
+  padding: 1rem;
+  color: rgb(85, 85, 85);
+  flex-grow: 1;
+}
+
+.motion {
+  align-self: center;
+  padding: 1rem;
+  font-size: 1.1rem;
+  color: gray;
+  position: relative;
+}
+.motion::before {
+  content: "";
+  border-radius: 50%;
+	width: 1.2rem;
+	height: 1.2rem;
+	display: block;
+	position: absolute;
+	left: -0.8rem;
+	background: linear-gradient(to right, rgba(207,15,15,1) 0%, rgba(133,7,7,1) 100%);
+	top: 1.2rem;
+}
+
+#next {
+  padding: 0 1rem;
+  font-size: 1.3rem;
+  margin-top: -1rem;
+}
+
+.next-meeting {
+  font-weight: 300;
+}
+
+#book {
+  background: #E8E4F0;
+  border-top: 1px solid #CDBFE3;
+  border-bottom: 1px solid #CDBFE3;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+#book h2 {
+  margin: 0;
+  font-weight: 300;
+  color: #563D7C;
+  opacity: .8;
+}
+
+.book-now {
+  margin: 1rem -1rem;
+  display: flex;
+}
+
+.book-now button {
+  height: 5rem;
+  width: 5rem;
+  flex-grow: 1;
+  margin: 0px 1rem;
+  background: linear-gradient(to bottom, #563D7C 0px, #6F5499 100%);
+  border: 1px solid #CDBFE3;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: white;
+  font-weight: 100;
+  font-size: 2rem;
+}
+
+.book-now button:hover {
+  background: linear-gradient(to top, #563D7C 0px, #6F5499 100%);
+}
+
+.book-now button[disabled] {
+  cursor: inherit;
+  background: lightgray;
+  border-color: darkgray;
+}
+
+#thumbs-up {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 1.2rem;
+}
+
+#thumbs-up img {
+  width: 50vw;
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{room}}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <link rel="stylesheet" href="/room.css">
+</head>
+<body>
+  <section id="header">
+    {{room}}
+  </section>
+  <section id="state">
+    <div class="state">{{freeText}}</div>
+    <div class="motion {{#noMotion}}no-motion{{/noMotion}}">{{motionText}}</div>
+  </section>
+  <section id="next">
+    <span class="next-meeting">{{nextText}}</span>
+  </section>
+  <section id="book">
+    <h2>Book now</h2>
+    <form method="post" action="/book">
+    <section class="book-now">
+      <input type="hidden" name="calendar" value="{{calendar}}">
+      <button name="b15" id="b15" {{#disabled15}}disabled{{/disabled15}}>15</button>
+      <button name="b30" id="b30" {{#disabled30}}disabled{{/disabled30}}>30</button>
+      <button name="b60" id="b60" {{#disabled60}}disabled{{/disabled60}}>60</button>
+    </section>
+    </form>
+  </section>
+</body>
+</html>
