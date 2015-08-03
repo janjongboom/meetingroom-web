@@ -1,0 +1,14 @@
+@import url("base.css");
+
+#header {
+  background-image: linear-gradient(135deg, #feccb1 0%,#f17432 50%,#ea5507 51%,#fb955e 100%);
+  color: white;
+  padding: 1rem;
+  font-weight: 300;
+  font-size: 1.6rem;
+  border-bottom: solid 1px #fb955e;
+}
+
+#please-wait {
+  padding: 0 1rem;
+}

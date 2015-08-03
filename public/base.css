@@ -1,0 +1,16 @@
+@import url(//fonts.googleapis.com/css?family=Open+Sans:400,700,300,600,800);
+
+html {
+  font-size: 3.5vw;
+}
+
+body {
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+}
+
+@media (min-width: 480px) {
+  html {
+    font-size: 16px;
+  }
+}

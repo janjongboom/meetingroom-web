@@ -2,6 +2,8 @@ var assert = require('assert');
 
 assert(process.env.CLIENT_ID, 'Env CLIENT_ID needs to be set');
 assert(process.env.CLIENT_SECRET, 'Env CLIENT_SECRET needs to be set');
+assert(process.env.TF_USER, 'Env TF_USER needs to be set');
+assert(process.env.TF_PASSWORD, 'Env TF_PASSWORD needs to be set');
 assert(process.argv[2], 'Need to pass in a second argument (dev|prod)');
 
 var fs = require('fs');
@@ -14,6 +16,7 @@ var GoogleStrategy = require('passport-google-oauth2').Strategy;
 var session = require('express-session');
 var SessionFileStore = require('session-file-store')(session);
 var gcal = require('google-calendar');
+var request = require('request');
 var dirty = require('dirty');
 var db = dirty('user.db');
 var mu = require('mu2');
@@ -51,6 +54,9 @@ passport.deserializeUser(function(userId, done) {
   done(null, db.get('profile' + userId));
 });
 
+// Meeting rooms with their sensor in Thingfabric
+var rooms = config.rooms;
+
 // Express routes
 var app = express();
 
@@ -66,29 +72,95 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.get('/', function (req, res) {
-  if (req.user && req.user.token) {
-    res.redirect(302, '/loggedin');
+  if (config.clear_mu_cache) {
+    mu.clearCache();
+  }
+  var stream = mu.compileAndRender('home.html', {});
+  util.pump(stream, res);
+});
+
+app.post('/book', function(req, res, next) {
+  var time;
+  if (typeof req.body.b15 !== undefined) {
+    time = 15;
+  }
+  else if (typeof req.body.b30 !== undefined) {
+    time = 30;
+  }
+  else if (typeof req.body.b60 !== undefined) {
+    time = 60;
   }
   else {
+    return next('Could not figure out which button you pressed');
+  }
+
+  var room = rooms[req.body.roomId];
+  if (!room) {
+    return next('Could not find room ' + req.body.roomId);
+  }
+
+  var calendar = new gcal.GoogleCalendar(req.user.token);
+  calendar.events.insert(room.calendarId, {
+    start: {
+      dateTime: new Date().toISOString()
+    },
+    end: {
+      dateTime: new Date(Date.now() + (time * 60 * 1000)).toISOString()
+    },
+    summary: req.user.displayName
+  }, function(err, other) {
+    if (err) return next(err);
+
     if (config.clear_mu_cache) {
       mu.clearCache();
     }
-    var stream = mu.compileAndRender('index.html', {});
+    var stream = mu.compileAndRender('booked-ok.html', {
+      room: room.name,
+      duration: time
+    });
     util.pump(stream, res);
-  }
+  });
 });
 
-app.get('/loggedin', function (req, res, next) {
-  if (!req.user || !req.user.token) {
-    return res.redirect(302, '/');
+app.get('/auth/google', passport.authenticate('google', {
+  scope: ['email', 'https://www.googleapis.com/auth/calendar']
+}));
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  function(req, res, next) {
+    // Successful authentication
+    if (!req.session.room) {
+      return next('No room found in your session');
+    }
+
+    return res.redirect(302, '/room/' + req.session.room);
+  });
+
+app.get('/room/:id', function(req, res, next) {
+  if (!rooms[req.params.id]) {
+    return next('Could not find meetingroom ' + req.params.id);
   }
+
+  if (!req.user || !req.user.token) {
+    req.session.room = req.params.id;
+    if (config.clear_mu_cache) {
+      mu.clearCache();
+    }
+    var stream = mu.compileAndRender('room-landing.html', {});
+    util.pump(stream, res);
+    return;
+  }
+
+  var room = rooms[req.params.id];
 
   var now = new Date();
   // var now = new Date('2015-07-27T11:05:00.000Z');
   // var now = new Date('2015-07-30T09:10:00.000Z');
+  // var now = new Date('2015-08-03T12:10:00.000Z');
 
   var calendar = new gcal.GoogleCalendar(req.user.token);
-  calendar.events.list('0rlmj64nd2kk41q3jldro6s8sk@group.calendar.google.com', {
+  calendar.events.list(room.calendarId, {
     timeMin: now.toISOString(),
     timeMax: new Date(+now + 100 * 60 * 60 * 1000).toISOString(),
     singleEvents: true
@@ -122,10 +194,8 @@ app.get('/loggedin', function (req, res, next) {
     }, []);
 
     var opts = {
-      room: 'Boven de Balie Meetingroom #1',
-      noMotion: false,
-      motionText: 'Motion detected',
-      calendar: '0rlmj64nd2kk41q3jldro6s8sk@group.calendar.google.com'
+      room: room.name,
+      roomId: req.params.id
     };
 
     if (items.length && items[0][0] < now) {
@@ -157,63 +227,53 @@ app.get('/loggedin', function (req, res, next) {
       opts.disabled60 = minutesFromNow < 60;
     }
 
-    if (config.clear_mu_cache) {
-      mu.clearCache();
-    }
+    var motionUrl = config.thingfabric_server + '/thing/' +
+                    room.thing + '/present';
+    request.get(motionUrl, {
+      auth: {
+        user: process.env.TF_USER,
+        pass: process.env.TF_PASSWORD,
+      },
+      timeout: 10 * 1000
+    }, function (err, resp, body) {
+      if (err) {
+        console.error('Could not get data from TF', err);
+        opts.motionError = true;
+        opts.motionText = 'Error getting motion';
+      }
 
-    var stream = mu.compileAndRender('room.html', opts);
-    util.pump(stream, res);
-  });
-});
+      if (resp.statusCode === 404) {
+        opts.motionError = true;
+        opts.motionText = 'No motion sensor';
+      }
+      else if (resp.statusCode === 200) {
+        var data = JSON.parse(body);
+        var lastRise = Number(data.attributes.last_rise);
+        if (Number(data.attributes.rise_state) === 1 ||
+            lastRise < 5 * 60) {
+          opts.noMotion = false;
+          opts.motionText = 'Motion detected in the past 5 minutes';
+        }
+        else {
+          opts.noMotion = true;
+          opts.motionText = 'No motion detected for ' + ((lastRise / 60) | 0) +
+            ' minutes';
+        }
+      }
+      else {
+        opts.motionError = true;
+        opts.motionText = 'Error getting motion';
+      }
 
-app.post('/book', function(req, res, next) {
-  var time;
-  if (typeof req.body.b15 !== undefined) {
-    time = 15;
-  }
-  else if (typeof req.body.b30 !== undefined) {
-    time = 30;
-  }
-  else if (typeof req.body.b60 !== undefined) {
-    time = 60;
-  }
-  else {
-    return next('Could not figure out which button you pressed');
-  }
+      if (config.clear_mu_cache) {
+        mu.clearCache();
+      }
 
-  var calendar = new gcal.GoogleCalendar(req.user.token);
-  calendar.events.insert(req.body.calendar, {
-    start: {
-      dateTime: new Date().toISOString()
-    },
-    end: {
-      dateTime: new Date(Date.now() + (time * 60 * 1000)).toISOString()
-    },
-    summary: req.user.displayName
-  }, function(err, other) {
-    if (err) return next(err);
-
-    if (config.clear_mu_cache) {
-      mu.clearCache();
-    }
-    var stream = mu.compileAndRender('booked-ok.html', {
-      room: 'Boven de Balie Meetingroom #1',
-      duration: time
+      var stream = mu.compileAndRender('room.html', opts);
+      util.pump(stream, res);
     });
-    util.pump(stream, res);
   });
 });
-
-app.get('/auth/google', passport.authenticate('google', {
-  scope: ['email', 'https://www.googleapis.com/auth/calendar']
-}));
-
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication
-    res.redirect('/loggedin');
-  });
 
 var server = app.listen(process.env.PORT, process.env.HOST, function () {
   var host = server.address().address;

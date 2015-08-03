@@ -12,16 +12,19 @@
   </section>
   <section id="state">
     <div class="state">{{freeText}}</div>
-    <div class="motion {{#noMotion}}no-motion{{/noMotion}}">{{motionText}}</div>
   </section>
   <section id="next">
     <span class="next-meeting">{{nextText}}</span>
+  </section>
+  <section id="motion">
+    <div class="motion {{#noMotion}}no-motion{{/noMotion}}
+                       {{#motionError}}motion-error{{/motionError}}">{{motionText}}</div>
   </section>
   <section id="book">
     <h2>Book now</h2>
     <form method="post" action="/book">
     <section class="book-now">
-      <input type="hidden" name="calendar" value="{{calendar}}">
+      <input type="hidden" name="roomId" value="{{roomId}}">
       <button name="b15" id="b15" {{#disabled15}}disabled{{/disabled15}}>15</button>
       <button name="b30" id="b30" {{#disabled30}}disabled{{/disabled30}}>30</button>
       <button name="b60" id="b60" {{#disabled60}}disabled{{/disabled60}}>60</button>

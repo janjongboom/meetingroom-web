@@ -1,4 +1,12 @@
 {
   "clear_mu_cache": true,
-  "hostname": "https://meetingroom-janjongboom.c9.io"
+  "hostname": "https://meetingroom-janjongboom.c9.io",
+  "thingfabric_server": "https://api.m2m.io:443/2/account/domain/0v7ydbsp3xe8fzy/stuff/lora",
+  "rooms": {
+    "bdb1": {
+      "name": "Boven de Balie Meetingroom #1",
+      "calendarId": "0rlmj64nd2kk41q3jldro6s8sk@group.calendar.google.com",
+      "thing": "73318881"
+    }
+  }
 }

@@ -1,13 +1,4 @@
-@import url(//fonts.googleapis.com/css?family=Open+Sans:400,700,300,600,800);
-
-html {
-  font-size: 3.5vw;
-}
-
-body {
-  margin: 0;
-  font-family: 'Open Sans', sans-serif;
-}
+@import url("base.css");
 
 #header {
   background-image: linear-gradient(to bottom, #563D7C 0px, #6F5499 100%);
@@ -36,6 +27,7 @@ body {
   font-size: 1.1rem;
   color: gray;
   position: relative;
+  margin-left: 1.8rem;
 }
 .motion::before {
   content: "";
@@ -47,6 +39,9 @@ body {
 	left: -0.8rem;
 	background: linear-gradient(to right, rgba(207,15,15,1) 0%, rgba(133,7,7,1) 100%);
 	top: 1.2rem;
+}
+.motion.no-motion::before {
+  background: linear-gradient(135deg, #b4df5b 0%,#47ad6a 100%);
 }
 
 #next {
