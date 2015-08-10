@@ -147,7 +147,9 @@ app.get('/room/:id', function(req, res, next) {
     if (config.clear_mu_cache) {
       mu.clearCache();
     }
-    var stream = mu.compileAndRender('room-landing.html', {});
+    var stream = mu.compileAndRender('room-landing.html', {
+      name: rooms[req.params.id].name
+    });
     util.pump(stream, res);
     return;
   }
