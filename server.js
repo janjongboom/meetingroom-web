@@ -76,7 +76,7 @@ app.get('/', function (req, res) {
     mu.clearCache();
   }
   var stream = mu.compileAndRender('home.html', {});
-  util.pump(stream, res);
+  stream.pipe(res);
 });
 
 app.post('/book', function(req, res, next) {
@@ -118,7 +118,7 @@ app.post('/book', function(req, res, next) {
       room: room.name,
       duration: time
     });
-    util.pump(stream, res);
+    stream.pipe(res);
   });
 });
 
@@ -150,7 +150,7 @@ app.get('/room/:id', function(req, res, next) {
     var stream = mu.compileAndRender('room-landing.html', {
       name: rooms[req.params.id].name
     });
-    util.pump(stream, res);
+    stream.pipe(res);
     return;
   }
 
@@ -231,49 +231,15 @@ app.get('/room/:id', function(req, res, next) {
 
     var motionUrl = config.thingfabric_server + '/thing/' +
                     room.thing + '/present';
-    request.get(motionUrl, {
-      auth: {
-        user: process.env.TF_USER,
-        pass: process.env.TF_PASSWORD,
-      },
-      timeout: 10 * 1000
-    }, function (err, resp, body) {
-      if (err) {
-        console.error('Could not get data from TF', err);
-        opts.motionError = true;
-        opts.motionText = 'Error getting motion';
-      }
-
-      if (resp.statusCode === 404) {
         opts.motionError = true;
         opts.motionText = 'No motion sensor';
-      }
-      else if (resp.statusCode === 200) {
-        var data = JSON.parse(body);
-        var lastRise = Number(data.attributes.last_rise);
-        if (Number(data.attributes.rise_state) === 1 ||
-            lastRise < 5 * 60) {
-          opts.noMotion = false;
-          opts.motionText = 'Motion detected in the past 5 minutes';
-        }
-        else {
-          opts.noMotion = true;
-          opts.motionText = 'No motion detected for ' + ((lastRise / 60) | 0) +
-            ' minutes';
-        }
-      }
-      else {
-        opts.motionError = true;
-        opts.motionText = 'Error getting motion';
-      }
 
       if (config.clear_mu_cache) {
         mu.clearCache();
       }
 
       var stream = mu.compileAndRender('room.html', opts);
-      util.pump(stream, res);
-    });
+      stream.pipe(res);
   });
 });
 
